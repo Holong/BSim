@@ -13,30 +13,31 @@
 #include "distorm.h"
 #include "mnemonics.h"
 
-#define M_OFFSETOF(STRUCT, ELEMENT) \
-	&((STRUCT *)NULL)->ELEMENT;
-
-#define D_LINUXNONUSRCONTEXT 0x40000000
-
 int main (int argc, char *argv[]) 
 {
 
 	pid_t pid;
 	int stat, res;
 	int signo;
-	long ip, sp;
-	int ipoffs, spoffs;
-	struct user u_area;
+	long ip;
+	int ipoffs;
 
 	long buf[2];
 	_DecodedInst temp;
+	_DInst temp2;
 	unsigned int result_inst_count;
+	char FCbuf[20];
 
+	_CodeInfo ci;
+	ci.code = (const uint8_t*)buf;
+	ci.codeLen = sizeof(buf);
+	ci.codeOffset = 0;
+	ci.dt = Decode64Bits;
 
 	/*
 	 ** This program is started with the PID of the target process.
 	 */
-	if (argv[1] == NULL) {
+	if (argc != 2) {
 		printf("Need a program of traced process\n");
 		printf("Usage: %s program\n", argv[0]);
 		exit(1);
@@ -47,7 +48,7 @@ int main (int argc, char *argv[])
 		char* filename;
 
 		printf("Attaching to process %d\n", getpid());
-		if ((ptrace(PTRACE_TRACEME, 0, 0, 0)) != 0) {;
+		if ((res = ptrace(PTRACE_TRACEME, 0, 0, 0)) != 0) {;
 			printf("Attach result %d\n",res);
 		}
 
@@ -65,10 +66,7 @@ int main (int argc, char *argv[])
 	 ** Get the offset into the user area of the IP and SP registers. We'll
 	 ** need this later.
 	 */
-//	ipoffs = static_cast<int>(M_OFFSETOF(struct user, regs.rip));
-//	spoffs = static_cast<int>(M_OFFSETOF(struct user, regs.rsp));
 	ipoffs = 16*8;
-	spoffs = 19*8;
 
 	/*
 	 ** Attach to the process. This will cause the target process to become
@@ -118,7 +116,6 @@ int main (int argc, char *argv[])
 		 */
 
 		ip = ptrace(PTRACE_PEEKUSER, pid, ipoffs, 0);
-		sp = ptrace(PTRACE_PEEKUSER, pid, spoffs, 0);
 		buf[0] = ptrace(PTRACE_PEEKTEXT, pid, ip, 0);
 		buf[1] = ptrace(PTRACE_PEEKTEXT, pid, ip + 8, 0);
 
@@ -129,14 +126,46 @@ int main (int argc, char *argv[])
 		if(result_inst_count != 1)
 			printf("error\n");
 
-		printf("IP : 0x%016lx\t[%02d] %-30s %s%s%s\r\n", ip, temp.size, (char*)temp.instructionHex.p, (char*)temp.mnemonic.p, temp.operands.length != 0 ? " " : "", (char*)temp.operands.p);
+		distorm_decompose(&ci, &temp2, 1, &result_inst_count);
+		if(result_inst_count != 1)
+			printf("error\n");
 
-		/*
-		 ** If we're back to where we started tracing the loop, then exit
-		 */
+		switch(META_GET_FC(temp2.meta)) {
+			case FC_NONE:
+				sprintf(FCbuf, "FC_NONE");
+				break;
+			case FC_CALL:
+				sprintf(FCbuf, "FC_CALL");
+				break;
+			case FC_RET:
+				sprintf(FCbuf, "FC_RET");
+				break;
+			case FC_SYS:
+				sprintf(FCbuf, "FC_SYS");
+				break;
+			case FC_UNC_BRANCH:
+				sprintf(FCbuf, "FC_UNC_BRANCH");
+				break;
+			case FC_CND_BRANCH:
+				sprintf(FCbuf, "FC_CND_BRANCH");
+				break;
+			case FC_INT:
+				sprintf(FCbuf, "FC_INT");
+				break;
+			case FC_CMOV:
+				sprintf(FCbuf, "FC_CMOV");
+				break;
+		}
+
+		printf("IP : 0x%016lx\t[%02d] %-30s %s%s%-25s\t%s\n",
+				ip,
+				temp.size,
+				(char*)temp.instructionHex.p,
+				(char*)temp.mnemonic.p,
+				temp.operands.length != 0 ? " " : "",
+				(char*)temp.operands.p,
+				FCbuf);
 	}
-	printf("Debugging complete\n");
-
 	sleep(5);
 	return(0);
 }
