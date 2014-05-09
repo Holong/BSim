@@ -8,6 +8,10 @@
 #include <sys/reg.h>
 #include <sys/user.h>
 #include <sys/signal.h>
+#include <stdlib.h>
+
+#include "distorm.h"
+#include "mnemonics.h"
 
 #define M_OFFSETOF(STRUCT, ELEMENT) \
 	&((STRUCT *)NULL)->ELEMENT;
@@ -20,11 +24,13 @@ int main (int argc, char *argv[])
 	pid_t pid;
 	int stat, res;
 	int signo;
-	int ip, sp;
+	long ip, sp;
 	int ipoffs, spoffs;
-	int initialSP = -1;
-	int initialIP = -1;
 	struct user u_area;
+
+	long buf[2];
+	_DecodedInst temp;
+	unsigned int result_inst_count;
 
 
 	/*
@@ -86,7 +92,7 @@ int main (int argc, char *argv[])
 		 ** the psw. This will cause the child to exeute just one instruction and
 		 ** trap us again. The wait(2) catches the trap.
 		 */ 		
-		sleep(1);
+		//sleep(1);
 		if ((res = ptrace(PTRACE_SINGLESTEP, pid, 0, signo)) < 0) {
 			perror("Ptrace singlestep error");
 			exit(1);
@@ -110,39 +116,21 @@ int main (int argc, char *argv[])
 		/*
 		 ** Fetch the current IP and SP from the child's user area. Log them.
 		 */
+
 		ip = ptrace(PTRACE_PEEKUSER, pid, ipoffs, 0);
 		sp = ptrace(PTRACE_PEEKUSER, pid, spoffs, 0);
-		/*
-		 ** Checkto see where we are in the process. Using the ldd(1) utility, I
-		 ** dumped the list of shared libraries that were required by this process.
-		 ** This showed:
-		 **
-		 **     libc.so.6 => /lib/i686/libc.so.6 (0x40030000)
-		 **     /lib/ld-linux.so.2 => /lib/ld-linux.so.2 (0x40000000)
-		 **
-		 ** So basically, we can assume that any execuable address pointed to by
-		 ** the IP that is *over* 0x40000000 is either in ld.so, libc.so, or in
-		 ** some sort of kernel state. We really don't care about these addresses
-		 ** so we'll skip 'em. Also, nm(1) showed that all the local symbols
-		 ** we would be interested in start in the 0x08000000 range.
-		 */
-		if (ip & D_LINUXNONUSRCONTEXT) {
-			continue;
-		} 
-		if (initialIP == -1) {
-			initialIP = ip;
-			initialSP = sp;
-			printf("---- Starting LOOP IP %x SP %x ---- \n",
-					initialIP, initialSP);
-		} else {
-			if ((ip == initialIP) && (sp == initialSP)) {
-				ptrace(PTRACE_CONT, pid, 0, signo);
-				printf("----- LOOP COMPLETE -----\n");
-				break;
-			}
+		buf[0] = ptrace(PTRACE_PEEKTEXT, pid, ip, 0);
+		buf[1] = ptrace(PTRACE_PEEKTEXT, pid, ip + 8, 0);
+
+		if(distorm_decode(0, (const unsigned char*)buf, 16, Decode64Bits, &temp, 1, &result_inst_count) == DECRES_INPUTERR) {
+			printf("Input error\n");
+			exit(1);
 		}
-		printf("Stat %x IP %x SP %x  Last signal %d\n",stat, ip, sp,
-				signo);
+		if(result_inst_count != 1)
+			printf("error\n");
+
+		printf("IP : 0x%016lx\t[%02d] %-30s %s%s%s\r\n", ip, temp.size, (char*)temp.instructionHex.p, (char*)temp.mnemonic.p, temp.operands.length != 0 ? " " : "", (char*)temp.operands.p);
+
 		/*
 		 ** If we're back to where we started tracing the loop, then exit
 		 */
