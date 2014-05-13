@@ -81,6 +81,7 @@ int main (int argc, char *argv[])
 	printf("Wait result stat %x pid %d\n",stat, res);
 	stat = 0;
 	signo = 0;
+
 	/*
 	 ** Loop now, tracing the child
 	 */
@@ -90,7 +91,6 @@ int main (int argc, char *argv[])
 		 ** the psw. This will cause the child to exeute just one instruction and
 		 ** trap us again. The wait(2) catches the trap.
 		 */ 		
-		//sleep(1);
 		if ((res = ptrace(PTRACE_SINGLESTEP, pid, 0, signo)) < 0) {
 			perror("Ptrace singlestep error");
 			exit(1);
@@ -157,7 +157,7 @@ int main (int argc, char *argv[])
 				break;
 		}
 
-		printf("IP : 0x%016lx\t[%02d] %-30s %s%s%-25s\t%s\n",
+		printf("IP : 0x%016lx\t[%02d] %-30s %s%s%-35s\t%s\n",
 				ip,
 				temp.size,
 				(char*)temp.instructionHex.p,
