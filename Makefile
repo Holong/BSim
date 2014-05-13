@@ -7,11 +7,12 @@ SUBDIRS		:= src
 MODULEDIR	:= 
 APPDIR		:= app
 LIBDIR		:= $(TOPDIR)/lib
-LIB		:= distorm3
+LIBNAME		:= distorm3 error
+LIBS		:= $(foreach name, $(LIBNAME), -l$(name))
 
 include $(TOPDIR)/config.mk
 
 all : compile
-	$(CDOUBLE) $(addsuffix /built-in.o,$(SUBDIRS)) -o $(TARGET) -L$(LIBDIR) -l$(LIB)
+	$(CDOUBLE) $(addsuffix /built-in.o,$(SUBDIRS)) -o $(TARGET) -L$(LIBDIR) $(LIBS)
 
 include $(TOPDIR)/rules.mk

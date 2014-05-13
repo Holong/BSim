@@ -9,18 +9,20 @@
 #include <sys/user.h>
 #include <sys/signal.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "distorm.h"
 #include "mnemonics.h"
+#include "tracer.h"
+#include "error_functions.h"
+
+using std::endl;
+using std::cout;
+using std::cin;
 
 int main (int argc, char *argv[]) 
 {
-
-	pid_t pid;
-	int stat, res;
-	int signo;
-	long ip;
-	int ipoffs;
+	long ip;	
 
 	long buf[2];
 	_DecodedInst temp;
@@ -37,50 +39,22 @@ int main (int argc, char *argv[])
 	/*
 	 ** This program is started with the PID of the target process.
 	 */
-	if (argc != 2) {
-		printf("Need a program of traced process\n");
-		printf("Usage: %s program\n", argv[0]);
-		exit(1);
+	try {
+		if (argc != 2)
+			throw 1;
+	}
+	catch(int exept) {
+		usageErr("%s app_name\n", argv[0]);
 	}
 
-	if((pid = fork()) == 0)
-	{
-		char* filename;
+	Tracer tracer(argv[1]);
 
-		printf("Attaching to process %d\n", getpid());
-		if ((res = ptrace(PTRACE_TRACEME, 0, 0, 0)) != 0) {;
-			printf("Attach result %d\n",res);
-		}
-
-		filename = strrchr(argv[1], '/');
-		if(filename != NULL)
-			filename++;
-		else
-			filename = argv[1];
-
-		execl(argv[1], filename, (char*) NULL);
+	try {
+		tracer.traceStart();
 	}
-	res = waitpid(pid, &stat, WUNTRACED);
-
-	/*
-	 ** Get the offset into the user area of the IP and SP registers. We'll
-	 ** need this later.
-	 */
-	ipoffs = 16*8;
-
-	/*
-	 ** Attach to the process. This will cause the target process to become
-	 ** the child of this process. The target will be sent a SIGSTOP. call
-	 ** wait(2) after this to detect the child state change. We're expecting
-	 ** the new child state to be STOPPED
-	 */
-	if ((res != pid) || !(WIFSTOPPED(stat)) ) {
-		printf("Unexpected wait result res %d stat %x\n",res,stat);
-		exit(1);
+	catch(int exept) {
+		errExit("trace start");
 	}
-	printf("Wait result stat %x pid %d\n",stat, res);
-	stat = 0;
-	signo = 0;
 
 	/*
 	 ** Loop now, tracing the child
@@ -91,33 +65,15 @@ int main (int argc, char *argv[])
 		 ** the psw. This will cause the child to exeute just one instruction and
 		 ** trap us again. The wait(2) catches the trap.
 		 */ 		
-		if ((res = ptrace(PTRACE_SINGLESTEP, pid, 0, signo)) < 0) {
-			perror("Ptrace singlestep error");
-			exit(1);
+		try {
+			ip = tracer.traceSingleStep();
 		}
-		res = wait(&stat);
-		/*
-		 ** The previous call to wait(2) returned the child's signal number.
-		 ** If this is a SIGTRAP, then we set it to zero (this does not get
-		 ** passed on to the child when we PTRACE_CONT or PTRACE_SINGLESTEP
-		 ** it).  If it is the SIGHUP, then PTRACE_CONT the child and we 
-		 ** can exit.
-		 */
-		if ((signo = WSTOPSIG(stat)) == SIGTRAP) {
-			signo = 0;
+		catch(int exept) {
+			errExit("Single step");
 		}
-		if ((signo == SIGHUP) || (signo == SIGINT)) {
-			ptrace(PTRACE_CONT, pid, 0, signo);
-			printf("Child took a SIGHUP or SIGINT. We are done\n");
-			break;
-		}
-		/*
-		 ** Fetch the current IP and SP from the child's user area. Log them.
-		 */
 
-		ip = ptrace(PTRACE_PEEKUSER, pid, ipoffs, 0);
-		buf[0] = ptrace(PTRACE_PEEKTEXT, pid, ip, 0);
-		buf[1] = ptrace(PTRACE_PEEKTEXT, pid, ip + 8, 0);
+		buf[0] = ptrace(PTRACE_PEEKTEXT, tracer.getChildPid(), ip, 0);
+		buf[1] = ptrace(PTRACE_PEEKTEXT, tracer.getChildPid(), ip + 8, 0);
 
 		if(distorm_decode(0, (const unsigned char*)buf, 16, Decode64Bits, &temp, 1, &result_inst_count) == DECRES_INPUTERR) {
 			printf("Input error\n");
