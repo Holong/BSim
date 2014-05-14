@@ -15,6 +15,7 @@
 #include "mnemonics.h"
 #include "tracer.h"
 #include "error_functions.h"
+#include "disassemble.h"
 
 using std::endl;
 using std::cout;
@@ -22,19 +23,7 @@ using std::cin;
 
 int main (int argc, char *argv[]) 
 {
-	long ip;	
-
-	long buf[2];
-	_DecodedInst temp;
-	_DInst temp2;
-	unsigned int result_inst_count;
-	char FCbuf[20];
-
-	_CodeInfo ci;
-	ci.code = (const uint8_t*)buf;
-	ci.codeLen = sizeof(buf);
-	ci.codeOffset = 0;
-	ci.dt = Decode64Bits;
+	unsigned long ip;	
 
 	/*
 	 ** This program is started with the PID of the target process.
@@ -46,7 +35,9 @@ int main (int argc, char *argv[])
 	catch(int exept) {
 		usageErr("%s app_name\n", argv[0]);
 	}
-
+	
+	Disassembler disAssem;
+	InfoRegs infoRegs;
 	Tracer tracer(argv[1]);
 
 	try {
@@ -55,7 +46,7 @@ int main (int argc, char *argv[])
 	catch(int exept) {
 		errExit("trace start");
 	}
-
+	
 	/*
 	 ** Loop now, tracing the child
 	 */
@@ -66,12 +57,15 @@ int main (int argc, char *argv[])
 		 ** trap us again. The wait(2) catches the trap.
 		 */ 		
 		try {
-			ip = tracer.traceSingleStep();
+			tracer.traceSingleStep(infoRegs);
+			ip = infoRegs.getRIP();
 		}
 		catch(int exept) {
 			errExit("Single step");
 		}
-
+		
+		disAssem.ShowInst(ip, tracer.getChildPid());
+/*
 		buf[0] = ptrace(PTRACE_PEEKTEXT, tracer.getChildPid(), ip, 0);
 		buf[1] = ptrace(PTRACE_PEEKTEXT, tracer.getChildPid(), ip + 8, 0);
 
@@ -121,6 +115,7 @@ int main (int argc, char *argv[])
 				temp.operands.length != 0 ? " " : "",
 				(char*)temp.operands.p,
 				FCbuf);
+				*/
 	}
 	sleep(5);
 	return(0);
