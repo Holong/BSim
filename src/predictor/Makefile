@@ -5,7 +5,7 @@ endif
 include $(TOPDIR)/config.mk
 
 TARGET		:= built-in.o
-SUBDIRS		:= 
+SUBDIRS		:=
 OBJS		:= $(patsubst %.S, %.o, $(wildcard *.S))
 OBJS		+= $(patsubst %.c, %.o, $(wildcard *.c))
 OBJS		+= $(patsubst %.cpp, %.o, $(wildcard *.cpp))

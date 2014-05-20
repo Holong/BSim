@@ -38,7 +38,7 @@ void Disassembler::analyze(unsigned long ip, pid_t pid) throw (int)
 	}
 }
 
-void Disassembler::ShowInst(unsigned long ip, pid_t pid) throw (int)
+void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 {
 	analyze(ip, pid);
 
@@ -77,4 +77,24 @@ void Disassembler::ShowInst(unsigned long ip, pid_t pid) throw (int)
 			inst1.operands.length != 0 ? " " : "",
 			(char*)inst1.operands.p,
 			FCbuf);
+}
+
+int Disassembler::isBranch(unsigned long ip, pid_t pid) throw (int)
+{
+	int result;
+
+	analyze(ip, pid);
+
+	result = META_GET_FC(inst2.meta);
+
+	if(result > 7 || result < 0)
+		throw 1;
+	return result;
+}
+
+unsigned int Disassembler::getInstLen(unsigned long ip, pid_t pid) throw (int)
+{
+	analyze(ip, pid);
+	
+	return inst1.size;
 }

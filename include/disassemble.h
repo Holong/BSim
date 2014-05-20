@@ -17,7 +17,9 @@ private:
 	void analyze(unsigned long ip, pid_t pid) throw (int);
 public:
 	Disassembler();
-	void ShowInst(unsigned long ip, pid_t pid) throw (int);
+	void showInst(unsigned long ip, pid_t pid) throw (int);
+	int isBranch(unsigned long ip, pid_t pid) throw (int);
+	unsigned int getInstLen(unsigned long ip, pid_t pid) throw (int);
 };
 
 #endif

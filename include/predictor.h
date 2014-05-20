@@ -1,6 +1,8 @@
 #ifndef __PREDICTOR_H__
 #define __PREDICTOR_H__
 
+#include <unistd.h>
+
 class BranchResult
 {
 private:
@@ -22,7 +24,7 @@ public:
 		return TrueOrFalse;
 	}
 
-	unsigned long getJmpAddress(unsigned long)
+	unsigned long getJmpAddress()
 	{
 		return jmpAddress;
 	}
@@ -30,21 +32,15 @@ public:
 
 class BPredictor
 {
+protected:
+	pid_t pid;
+
 public:
-	virtual void do_predict(unsigned long ip, BranchResult& result);
-}
+	BPredictor(pid_t pid) {
+		this->pid = pid;
+	};
 
-
-
-
-
-
-
-
-
-
-
-
-
+	virtual void do_predict(unsigned long ip, BranchResult& result) = 0;
+};
 
 #endif

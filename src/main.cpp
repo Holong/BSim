@@ -17,6 +17,9 @@
 #include "error_functions.h"
 #include "disassemble.h"
 
+#include "profiler.h"
+#include "predictor/notTaken.h"
+
 using std::endl;
 using std::cout;
 using std::cin;
@@ -37,6 +40,7 @@ int main (int argc, char *argv[])
 	}
 	
 	Disassembler disAssem;
+	
 	InfoRegs infoRegs;
 	Tracer tracer(argv[1]);
 
@@ -47,6 +51,9 @@ int main (int argc, char *argv[])
 		errExit("trace start");
 	}
 	
+	BPredictor* predictor = new NotTaken(tracer.getChildPid());
+	Profiler profiler(tracer.getChildPid(), predictor);
+
 	/*
 	 ** Loop now, tracing the child
 	 */
@@ -61,11 +68,13 @@ int main (int argc, char *argv[])
 			ip = infoRegs.getRIP();
 		}
 		catch(int exept) {
-			errExit("Single step");
+			errMsg("Single step");
+			break;
 		}
 		
-		disAssem.ShowInst(ip, tracer.getChildPid());
+		disAssem.showInst(ip, tracer.getChildPid());
+		profiler.setIP(ip);
 	}
-	sleep(5);
-	return(0);
+	printf("Miss Rate : %lf\n", profiler.getMissRate());
+	return 0;
 }
