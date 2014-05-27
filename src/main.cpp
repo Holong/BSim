@@ -40,8 +40,9 @@ int main (int argc, char *argv[])
 	}
 	
 	Disassembler disAssem;
-	
 	InfoRegs infoRegs;
+
+	// select profiled program
 	Tracer tracer(argv[1]);
 
 	try {
@@ -51,6 +52,7 @@ int main (int argc, char *argv[])
 		errExit("trace start");
 	}
 	
+	// set predictor
 	BPredictor* predictor = new NotTaken(tracer.getChildPid());
 	Profiler profiler(tracer.getChildPid(), predictor);
 
@@ -74,6 +76,7 @@ int main (int argc, char *argv[])
 		
 		disAssem.showInst(ip, tracer.getChildPid());
 		profiler.setIP(ip);
+		profiler.toString();
 	}
 	printf("Miss Rate : %lf\n", profiler.getMissRate());
 	return 0;

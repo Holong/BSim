@@ -69,7 +69,7 @@ void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 			break;
 	}
 
-	printf("IP : 0x%016lx\t[%02d] %-30s %s%s%-35s\t%s\n",
+	printf("\nIP : 0x%016lx\t[%02d] %-30s %s%s%-35s\t%s\n",
 			ip,
 			inst1.size,
 			(char*)inst1.instructionHex.p,

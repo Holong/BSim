@@ -36,10 +36,13 @@ protected:
 	pid_t pid;
 
 public:
+	char name[100];
+
 	BPredictor(pid_t pid) {
 		this->pid = pid;
 	};
 
+	virtual char* nameOfPredictor() = 0;
 	virtual void do_predict(unsigned long ip, BranchResult& result) = 0;
 };
 
