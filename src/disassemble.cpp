@@ -1,7 +1,9 @@
 #include <iostream>
 #include <sys/ptrace.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "error_functions.h"
 #include "disassemble.h"
 #include "distorm.h"
 
@@ -40,9 +42,18 @@ void Disassembler::analyze(unsigned long ip, pid_t pid) throw (int)
 
 void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 {
-	analyze(ip, pid);
+	unsigned int type = 0;
 
-	switch(META_GET_FC(inst2.meta)) {
+	
+	try {
+		type = typeOfInst(ip, pid);
+	}
+	catch (int except) {
+		cout << "type" << endl;
+		exit(1);
+	}
+
+	switch(type & 0xF) {
 		case FC_NONE:
 			sprintf(FCbuf, "FC_NONE");
 			break;
@@ -69,21 +80,19 @@ void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 			break;
 	}
 
-	printf("\nIP : 0x%016lx\t[%02d] %-30s %s%s%-35s\t%s\n",
+	printf("IP : 0x%016lx\t[%02d] %-23s %-12s%s%-35s\t%-20s 0x%02x\n",
 			ip,
 			inst1.size,
 			(char*)inst1.instructionHex.p,
 			(char*)inst1.mnemonic.p,
 			inst1.operands.length != 0 ? " " : "",
 			(char*)inst1.operands.p,
-			FCbuf);
+			FCbuf, type);
 }
 
-int Disassembler::isBranch(unsigned long ip, pid_t pid) throw (int)
+unsigned int Disassembler::isBranch() throw (int)
 {
 	int result;
-
-	analyze(ip, pid);
 
 	result = META_GET_FC(inst2.meta);
 
@@ -97,4 +106,93 @@ unsigned int Disassembler::getInstLen(unsigned long ip, pid_t pid) throw (int)
 	analyze(ip, pid);
 	
 	return inst1.size;
+}
+
+int Disassembler::getOperand() throw (int)
+{
+	bool imm = false;
+	bool reg = false;
+	bool relative = false;
+	bool memory = false;
+
+	int result = 0;
+
+	for(int i = 0; i < 4; i++)
+	{
+		switch(inst2.ops[i].type)
+		{
+			case 1:
+				reg = true;
+				break;
+			case 2:
+			case 3:
+			case 4:
+				imm = true;
+				break;
+			case 5:
+			case 6:
+			case 7:
+			case 9:
+				memory = true;
+				break;
+			case 8:
+				relative = true;
+				break;
+			default:
+				break;
+		}
+	}
+
+	if(imm)
+		result = DIRECT;
+	else if(reg)
+		result = REG;
+	else if(relative)
+		result = RELATIVE;
+	else if(memory)
+		result = MEMORY;
+	else
+		result = BRANCHTYPENUM;
+
+	return result;
+}
+
+unsigned int Disassembler::typeOfInst(unsigned long ip, pid_t pid) throw (int)
+{
+	unsigned long result = 0;
+
+	analyze(ip, pid);
+
+	result = isBranch();
+
+	switch(result)
+	{
+		case NOT:
+			break;
+		case CALL:
+			result |= getOperand() << 4;
+			break;
+		case RETURN:
+			result |= MEMORY << 4;
+			break;
+		case SYSCALL:
+			result |= REG << 4;
+			break;
+		case JMP:
+			result |= getOperand() << 4; 
+			break;
+		case CND_JMP:
+			result |= getOperand() << 4;
+			break;
+		case INT:
+			result |= DIRECT << 4;
+			break;
+		case PRE:
+			result |= REG << 4;
+			break;
+		default:
+			throw 1;
+	}
+
+	return result;
 }

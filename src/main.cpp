@@ -74,10 +74,23 @@ int main (int argc, char *argv[])
 			break;
 		}
 		
-		disAssem.showInst(ip, tracer.getChildPid());
-		profiler.setIP(ip);
-		profiler.toString();
+		try {
+			disAssem.showInst(ip, tracer.getChildPid());
+		}
+		catch(int exept) {
+			errMsg("showInst");
+			break;
+		}
+
+		try {
+			profiler.setIP(ip);
+		}
+		catch(int execpt) {
+			errMsg("setIP");
+			break;
+		}
 	}
+	profiler.toString();
 	printf("Miss Rate : %lf\n", profiler.getMissRate());
 	return 0;
 }

@@ -36,7 +36,7 @@ void Profiler::setIP(unsigned long ip)
 
 	Disassembler disAssem;
 
-	if(disAssem.isBranch(currentIP, pid)) {
+	if(disAssem.typeOfInst(currentIP, pid)) {
 
 		totalNumOfBranchInst++;
 		beforeBranch = true;

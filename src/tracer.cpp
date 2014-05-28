@@ -48,9 +48,6 @@ void Tracer::traceStart() throw (int)
 
 void Tracer::traceSingleStep(InfoRegs& pInfoRegs) throw (int)
 {
-	int ipoffs = 16 * 8;
-	long ip;
-
 	if( (res = ptrace(PTRACE_SINGLESTEP, childPid, 0, signo)) < 0) {
 		throw res;
 	}

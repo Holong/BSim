@@ -3,6 +3,9 @@
 
 #include "distorm.h"
 
+enum {NOT = 0, CALL, RETURN, SYSCALL, JMP, CND_JMP, INT, PRE, TYPENUM};
+enum {DIRECT = 0, REG, RELATIVE, MEMORY, BRANCHTYPENUM};
+
 class Disassembler
 {
 private:
@@ -15,10 +18,13 @@ private:
 	_CodeInfo ci;
 
 	void analyze(unsigned long ip, pid_t pid) throw (int);
+	int getOperand() throw (int);
+	unsigned int isBranch() throw (int);
 public:
 	Disassembler();
 	void showInst(unsigned long ip, pid_t pid) throw (int);
-	int isBranch(unsigned long ip, pid_t pid) throw (int);
+	unsigned int typeOfInst(unsigned long ip, pid_t pid) throw (int);
+
 	unsigned int getInstLen(unsigned long ip, pid_t pid) throw (int);
 };
 
