@@ -10,19 +10,37 @@ class Profiler
 {
 private:
 	pid_t pid;
+	BPredictor* pPredictor;
 
+	bool beforeBranch;
 	unsigned long beforeIP;
 	unsigned long currentIP;
 	unsigned long nextIP;
 	unsigned long predictedIP;
 
-	BPredictor* pPredictor;
-
-	bool beforeBranch;
-
 	unsigned long totalNumOfInst;
+
 	unsigned long totalNumOfBranchInst;
+	unsigned long numOfNotBranch;
+	unsigned long numOfCall;
+	unsigned long numOfReturn;
+	unsigned long numOfSyscall;
+	unsigned long numOfJump;
+	unsigned long numOfCondJump;
+	unsigned long numOfInterrupt;
+	unsigned long numOfPredicate;
+
 	unsigned long totalNumOfMissPredict;
+	unsigned long numOfMissPredictDirection;
+	unsigned long numOfMissPredictAddress;
+	unsigned long numOfMissPredictBoth;
+
+	unsigned long numOfCondDirectBranch;
+	unsigned long numOfCondIndirectBranch;
+	unsigned long numOfUnCondDirectBranch;
+	unsigned long numOfUnCondIndirectBranch;
+
+
 
 	unsigned long getNextInstFromPredictor(unsigned long ip);
 	
