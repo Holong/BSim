@@ -39,7 +39,7 @@ int main (int argc, char *argv[])
 		usageErr("%s app_name\n", argv[0]);
 	}
 	
-	Disassembler disAssem;
+	Disassembler* disAssem = new Disassembler;
 	InfoRegs infoRegs;
 
 	// select profiled program
@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
 	
 	// set predictor
 	BPredictor* predictor = new NotTaken(tracer.getChildPid());
-	Profiler profiler(tracer.getChildPid(), predictor);
+	Profiler profiler(tracer.getChildPid(), predictor, disAssem);
 
 	/*
 	 ** Loop now, tracing the child
@@ -75,19 +75,17 @@ int main (int argc, char *argv[])
 		}
 		
 		try {
-			disAssem.showInst(ip, tracer.getChildPid());
+			disAssem->showInst(ip, tracer.getChildPid());
 		}
-		catch(int exept) {
+		catch(int ex) {
 			errMsg("showInst");
-			break;
 		}
 
 		try {
 			profiler.setIP(ip);
 		}
 		catch(int execpt) {
-			errMsg("setIP");
-			break;
+			errMsg("setIP\n");
 		}
 	}
 	profiler.toString();

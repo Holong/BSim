@@ -3,7 +3,7 @@
 #include "profiler.h"
 #include "disassemble.h"
 
-Profiler::Profiler(pid_t pid, BPredictor* branchPredictor)
+Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem)
 {
 	this->pid = pid;
 
@@ -19,6 +19,7 @@ Profiler::Profiler(pid_t pid, BPredictor* branchPredictor)
 	totalNumOfMissPredict = 0;
 
 	pPredictor = branchPredictor;
+	pDisAssem = disAssem;
 }
 
 void Profiler::setIP(unsigned long ip)
@@ -34,9 +35,7 @@ void Profiler::setIP(unsigned long ip)
 
 	currentIP = ip;
 
-	Disassembler disAssem;
-
-	if(disAssem.typeOfInst(currentIP, pid)) {
+	if(pDisAssem->typeOfInst(currentIP, pid)) {
 
 		totalNumOfBranchInst++;
 		beforeBranch = true;
@@ -49,7 +48,7 @@ void Profiler::setIP(unsigned long ip)
 			predictedIP = result.getJmpAddress();
 		}
 		else {
-			predictedIP = currentIP + disAssem.getInstLen(ip, pid);
+			predictedIP = currentIP + pDisAssem->getInstLen(currentIP, pid);
 		}
 	}
 	else {

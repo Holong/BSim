@@ -26,6 +26,7 @@ class Profiler
 private:
 	pid_t pid;
 	BPredictor* pPredictor;
+	Disassembler* pDisAssem;
 
 	bool beforeBranch;
 	unsigned long beforeIP;
@@ -42,7 +43,7 @@ private:
 	unsigned long getNextInstFromPredictor(unsigned long ip);
 	
 public:
-	Profiler(pid_t pid, BPredictor* branchPredictor);
+	Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem);
 	void setIP(unsigned long ip);
 	void toString();
 	double getMissRate();

@@ -33,9 +33,9 @@ void Disassembler::analyze(unsigned long ip, pid_t pid) throw (int)
 	}
 
 	distorm_decompose(&ci, &inst2, 1, &resultIntCount);
-
 	if(resultIntCount != 1) {
 		cout << "distorm_decompose error" << endl;
+		cout << resultIntCount << endl;
 		throw 1;
 	}
 }
@@ -45,13 +45,7 @@ void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 	unsigned int type = 0;
 
 	
-	try {
-		type = typeOfInst(ip, pid);
-	}
-	catch (int except) {
-		cout << "type" << endl;
-		exit(1);
-	}
+	type = typeOfInst(ip, pid);
 
 	switch(type & 0xF) {
 		case FC_NONE:
@@ -160,11 +154,10 @@ int Disassembler::getOperand() throw (int)
 unsigned int Disassembler::typeOfInst(unsigned long ip, pid_t pid) throw (int)
 {
 	unsigned long result = 0;
-
+	
 	analyze(ip, pid);
-
+	
 	result = isBranch();
-
 	switch(result)
 	{
 		case NOT:
