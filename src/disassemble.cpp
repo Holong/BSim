@@ -43,7 +43,6 @@ void Disassembler::analyze(unsigned long ip, pid_t pid) throw (int)
 	distorm_decompose(&ci, &inst2, 1, &resultIntCount);
 	if(resultIntCount != 1) {
 		cout << "distorm_decompose error" << endl;
-		cout << resultIntCount << endl;
 		throw 1;
 	}
 }
@@ -98,7 +97,7 @@ unsigned int Disassembler::isBranch() throw (int)
 
 	result = META_GET_FC(inst2.meta);
 
-	if(result == 3 || result == 7)
+	if(result == 3 || result == 7)	// predicate & syscall 
 		result = 0;
 
 	if(result > 7 || result < 0)
@@ -149,15 +148,15 @@ int Disassembler::getOperand() throw (int)
 		}
 	}
 
-	if(imm)
-		result = DIRECT;
+	if(memory)
+		result = MEMORY;
 	else if(reg)
 		result = REG;
 	else if(relative)
-		result = RELATIVE;
-	else if(memory)
-		result = MEMORY;
-	else
+		result = DIRECT;
+	else if(imm)
+		result = DIRECT;
+	else 
 		result = BRANCHTYPENUM;
 
 	return result;

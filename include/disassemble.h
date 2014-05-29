@@ -4,7 +4,7 @@
 #include "distorm.h"
 
 enum {NOT = 0, CALL, RETURN, SYSCALL, JMP, CND_JMP, INT, PRE, TYPENUM};
-enum {DIRECT = 0, REG, RELATIVE, MEMORY, BRANCHTYPENUM};
+enum {DIRECT = 0, REG, MEMORY, BRANCHTYPENUM};
 
 #define InstType(data)		((data) & 0xF)
 #define BranchType(data)	((data) >> 4)

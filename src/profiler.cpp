@@ -113,9 +113,6 @@ void Profiler::toString()
 			case REG:
 				printf("REGISTER");
 				break;
-			case RELATIVE:
-				printf("RELATIVE");
-				break;
 			case MEMORY:
 				printf("MEMORY  ");
 				break;
@@ -136,9 +133,6 @@ void Profiler::toString()
 				break;
 			case REG:
 				printf("REGISTER");
-				break;
-			case RELATIVE:
-				printf("RELATIVE");
 				break;
 			case MEMORY:
 				printf("MEMORY  ");
@@ -161,9 +155,6 @@ void Profiler::toString()
 			case REG:
 				printf("REGISTER");
 				break;
-			case RELATIVE:
-				printf("RELATIVE");
-				break;
 			case MEMORY:
 				printf("MEMORY  ");
 				break;
@@ -185,9 +176,6 @@ void Profiler::toString()
 			case REG:
 				printf("REGISTER");
 				break;
-			case RELATIVE:
-				printf("RELATIVE");
-				break;
 			case MEMORY:
 				printf("MEMORY  ");
 				break;
@@ -208,9 +196,6 @@ void Profiler::toString()
 				break;
 			case REG:
 				printf("REGISTER");
-				break;
-			case RELATIVE:
-				printf("RELATIVE");
 				break;
 			case MEMORY:
 				printf("MEMORY  ");
