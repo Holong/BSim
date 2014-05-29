@@ -74,14 +74,14 @@ void Disassembler::showInst(unsigned long ip, pid_t pid) throw (int)
 			break;
 	}
 
-	printf("IP : 0x%016lx\t[%02d] %-23s %-12s%s%-35s\t%-20s 0x%02x\n",
+	printf("IP : 0x%016lx\t[%02d] %-23s %-12s%s%-35s\t%-20s [%x, %x]\n",
 			ip,
 			inst1.size,
 			(char*)inst1.instructionHex.p,
 			(char*)inst1.mnemonic.p,
 			inst1.operands.length != 0 ? " " : "",
 			(char*)inst1.operands.p,
-			FCbuf, type);
+			FCbuf, InstType(type), BranchType(type));
 }
 
 unsigned int Disassembler::isBranch() throw (int)
@@ -90,8 +90,12 @@ unsigned int Disassembler::isBranch() throw (int)
 
 	result = META_GET_FC(inst2.meta);
 
+	if(result == 3 || result == 7)
+		result = 0;
+
 	if(result > 7 || result < 0)
 		throw 1;
+
 	return result;
 }
 

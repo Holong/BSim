@@ -10,6 +10,7 @@
 #include <sys/signal.h>
 #include <stdlib.h>
 #include <iostream>
+#include <errno.h>
 
 #include "distorm.h"
 #include "mnemonics.h"
@@ -19,6 +20,8 @@
 
 #include "profiler.h"
 #include "predictor/notTaken.h"
+
+extern int errno;
 
 using std::endl;
 using std::cout;
@@ -37,6 +40,7 @@ int main (int argc, char *argv[])
 	}
 	catch(int exept) {
 		usageErr("%s app_name\n", argv[0]);
+		exit(1);
 	}
 	
 	Disassembler* disAssem = new Disassembler;
@@ -69,13 +73,17 @@ int main (int argc, char *argv[])
 			tracer.traceSingleStep(infoRegs);
 			ip = infoRegs.getRIP();
 		}
-		catch(int exept) {
+		catch(int except) {
+			if(errno == ESRCH) {
+				cout << "Target Process is terminated...." << endl;
+				break;
+			}
 			errMsg("Single step");
 			break;
 		}
 		
 		try {
-			disAssem->showInst(ip, tracer.getChildPid());
+		//	disAssem->showInst(ip, tracer.getChildPid());
 		}
 		catch(int ex) {
 			errMsg("showInst");

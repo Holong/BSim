@@ -13,7 +13,6 @@ struct statistics
 	unsigned long numOfSuccess;
 	unsigned long numOfMissPredictDirection;
 	unsigned long numOfMissPredictAddress;
-	unsigned long numOfMissPredictBoth;
 };
 
 struct type_of_inst
@@ -27,12 +26,15 @@ private:
 	pid_t pid;
 	BPredictor* pPredictor;
 	Disassembler* pDisAssem;
+	BranchResult predictedResult;
 
-	bool beforeBranch;
 	unsigned long beforeIP;
 	unsigned long currentIP;
 	unsigned long nextIP;
 	unsigned long predictedIP;
+
+	unsigned int beforeResult;
+	unsigned int currentResult;
 
 	unsigned long totalNumOfInst;
 	unsigned long totalNumOfBranchInst;

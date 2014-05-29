@@ -14,7 +14,7 @@ int main(void)
 	for(i = 0; i < 10; i ++)
 	{
 		j = i*10;
-		printf("sum : %d", add(i, j));
+		printf("sum : %d\n", add(i, j));
 	}
 
 	return 0;

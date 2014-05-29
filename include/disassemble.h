@@ -6,6 +6,9 @@
 enum {NOT = 0, CALL, RETURN, SYSCALL, JMP, CND_JMP, INT, PRE, TYPENUM};
 enum {DIRECT = 0, REG, RELATIVE, MEMORY, BRANCHTYPENUM};
 
+#define InstType(data)		((data) & 0xF)
+#define BranchType(data)	((data) >> 4)
+
 class Disassembler
 {
 private:

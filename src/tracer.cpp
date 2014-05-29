@@ -41,7 +41,7 @@ void Tracer::traceStart() throw (int)
 		throw res;
 	}
 
-	cout << "Wait result stat " << stat << " childPid " << res << endl;
+	// cout << "Wait result stat " << stat << " childPid " << res << endl;
 	stat = 0;
 	signo = 0;
 }
