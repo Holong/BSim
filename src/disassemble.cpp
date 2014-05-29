@@ -2,6 +2,7 @@
 #include <sys/ptrace.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "error_functions.h"
 #include "disassemble.h"
@@ -13,6 +14,13 @@ using std::endl;
 
 Disassembler::Disassembler()
 {
+	memset(buf, 0, sizeof(buf)/sizeof(long));
+	memset(&inst1, 0, sizeof(inst1));
+	memset(&inst2, 0, sizeof(inst2));
+	resultIntCount = 0;
+	memset(FCbuf, 0, sizeof(FCbuf)/sizeof(char));
+	memset(&ci, 0, sizeof(ci));
+
 	ci.code = (const uint8_t*)buf;
 	ci.codeLen = sizeof(buf);
 	ci.codeOffset = 0;

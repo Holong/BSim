@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
 		}
 		
 		try {
-		//	disAssem->showInst(ip, tracer.getChildPid());
+			disAssem->showInst(ip, tracer.getChildPid());
 		}
 		catch(int ex) {
 			errMsg("showInst");
