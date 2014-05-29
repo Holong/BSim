@@ -94,7 +94,7 @@ void Profiler::setIP(unsigned long ip)
 	}
 }
 
-void Profiler::toString()
+void Profiler::printRawData()
 {
 	printf("[%s] [totalInst : %ld, totalBranch : %ld, totalMiss : %ld]\n\n", pPredictor->nameOfPredictor(), totalNumOfInst, totalNumOfBranchInst, totalNumOfMissPredict);
 
@@ -208,7 +208,282 @@ void Profiler::toString()
 	}
 }
 
-double Profiler::getMissRate()
+void Profiler::printResult()
+{
+	printf("\n\n");
+	printf("Profile Result \n");
+	printf("  1. Predictor : %s\n", pPredictor->nameOfPredictor());
+	printf("  2. Target : %s\n", "TEMP");
+	printf("  3. Instruction Information\n\n");
+
+	printf("     1) Summary\n\n");
+
+	printf("        Total Instructions : %10ld\n", totalNumOfInst);
+	printf("              Branches     : %10ld\n", totalNumOfBranchInst);
+	printf("              Miss Rate    : %10lf\n\n", getTotalMissRate());
+	
+	printf("     2) Direction\n\n");
+
+	printf("        Direct Branches    : %10ld\n", getNumOfDirectInst());
+	printf("            Miss Rate      : %10lf\n", getDirectInstMissRate());
+	printf("            Direction Miss : %10lf\n", getDirectDirectionMissRate());
+	printf("            Address Miss   : %10lf\n\n", getDirectAddressMissRate());
+
+	printf("        Indirect Branches  : %10ld\n", getNumOfIndirectInst());
+	printf("            Miss Rate      : %10lf\n", getIndirectInstMissRate());
+	printf("            Direction Miss : %10lf\n", getIndirectDirectionMissRate());
+	printf("            Address Miss   : %10lf\n\n", getIndirectAddressMissRate());
+
+	
+	printf("     3) Condition\n\n");
+
+	printf("        Cond Branches      : %10ld\n", getNumOfCondInst());
+	printf("            Miss Rate      : %10lf\n", getCondInstMissRate());
+	printf("            Direction Miss : %10lf\n", getCondDirectionMissRate());
+	printf("            Address Miss   : %10lf\n\n", getCondAddressMissRate());
+
+	printf("        Uncond Branches    : %10ld\n", getNumOfUncondInst());
+	printf("            Miss Rate      : %10lf\n", getUncondInstMissRate());
+	printf("            Direction Miss : %10lf\n", getUncondDirectionMissRate());
+	printf("            Address Miss   : %10lf\n\n", getUncondAddressMissRate());
+
+}
+
+double Profiler::getTotalMissRate()
 {
 	return (double)totalNumOfMissPredict/(double)totalNumOfBranchInst;
 }
+
+unsigned long Profiler::getNumOfDirectInst()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[DIRECT].numOfInst;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfDirectDirectionMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[DIRECT].numOfMissPredictDirection;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfDirectAddressMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[DIRECT].numOfMissPredictAddress;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfIndirectInst()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[REG].numOfInst;
+		result += data[i].typeOfBranch[MEMORY].numOfInst;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfIndirectDirectionMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[REG].numOfMissPredictDirection;
+		result += data[i].typeOfBranch[MEMORY].numOfMissPredictDirection;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfIndirectAddressMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 1; i < TYPENUM; i++)
+	{
+		result += data[i].typeOfBranch[REG].numOfMissPredictAddress;
+		result += data[i].typeOfBranch[MEMORY].numOfMissPredictAddress;
+	}
+
+	return result;
+}
+
+
+double Profiler::getDirectInstMissRate()
+{
+	return ((double)getNumOfDirectDirectionMiss() +	(double)getNumOfDirectAddressMiss()) / (double)getNumOfDirectInst();
+}
+
+double Profiler::getDirectDirectionMissRate()
+{
+	return (double)getNumOfDirectDirectionMiss() / ((double)getNumOfDirectDirectionMiss() +
+			(double)getNumOfDirectAddressMiss());
+}
+
+double Profiler::getDirectAddressMissRate()
+{
+	return (double)getNumOfDirectAddressMiss() / ((double)getNumOfDirectDirectionMiss() +
+			(double)getNumOfDirectAddressMiss());
+}
+
+double Profiler::getIndirectInstMissRate()
+{
+	return ((double)getNumOfIndirectDirectionMiss() + (double)getNumOfIndirectAddressMiss()) / (double)getNumOfIndirectInst();
+}
+
+double Profiler::getIndirectDirectionMissRate()
+{
+	return (double)getNumOfIndirectDirectionMiss() / ((double)getNumOfIndirectDirectionMiss() +
+			(double)getNumOfIndirectAddressMiss());
+}
+
+double Profiler::getIndirectAddressMissRate()
+{
+	return (double)getNumOfIndirectAddressMiss() / ((double)getNumOfIndirectDirectionMiss() +
+			(double)getNumOfIndirectAddressMiss());
+}
+
+
+
+
+
+
+
+
+unsigned long Profiler::getNumOfCondInst()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CND_JMP].typeOfBranch[i].numOfInst;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfCondDirectionMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CND_JMP].typeOfBranch[i].numOfMissPredictDirection;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfCondAddressMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CND_JMP].typeOfBranch[i].numOfMissPredictAddress;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfUncondInst()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CALL].typeOfBranch[i].numOfInst;
+		result += data[RETURN].typeOfBranch[i].numOfInst;
+		result += data[JMP].typeOfBranch[i].numOfInst;
+		result += data[INT].typeOfBranch[i].numOfInst;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfUncondDirectionMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CALL].typeOfBranch[i].numOfMissPredictDirection;
+		result += data[RETURN].typeOfBranch[i].numOfMissPredictDirection;
+		result += data[JMP].typeOfBranch[i].numOfMissPredictDirection;
+		result += data[INT].typeOfBranch[i].numOfMissPredictDirection;
+	}
+
+	return result;
+}
+
+unsigned long Profiler::getNumOfUncondAddressMiss()
+{
+	unsigned long result = 0;
+
+	for(int i = 0; i < BRANCHTYPENUM; i++)
+	{
+		result += data[CALL].typeOfBranch[i].numOfMissPredictAddress;
+		result += data[RETURN].typeOfBranch[i].numOfMissPredictAddress;
+		result += data[JMP].typeOfBranch[i].numOfMissPredictAddress;
+		result += data[INT].typeOfBranch[i].numOfMissPredictAddress;
+	}
+
+	return result;
+}
+
+
+double Profiler::getCondInstMissRate()
+{
+	return ((double)getNumOfCondDirectionMiss() + (double)getNumOfCondAddressMiss()) / (double)getNumOfCondInst();
+}
+
+double Profiler::getCondDirectionMissRate()
+{
+	return (double)getNumOfCondDirectionMiss() / ((double)getNumOfCondDirectionMiss() +
+			(double)getNumOfCondAddressMiss());
+}
+
+double Profiler::getCondAddressMissRate()
+{
+	return (double)getNumOfCondAddressMiss() / ((double)getNumOfCondDirectionMiss() +
+			(double)getNumOfCondAddressMiss());
+}
+
+double Profiler::getUncondInstMissRate()
+{
+	return ((double)getNumOfUncondDirectionMiss() + (double)getNumOfUncondAddressMiss()) / (double)getNumOfUncondInst();
+}
+
+double Profiler::getUncondDirectionMissRate()
+{
+	return (double)getNumOfUncondDirectionMiss() / ((double)getNumOfUncondDirectionMiss() +
+			(double)getNumOfUncondAddressMiss());
+}
+
+double Profiler::getUncondAddressMissRate()
+{
+	return (double)getNumOfUncondAddressMiss() / ((double)getNumOfUncondDirectionMiss() +
+			(double)getNumOfUncondAddressMiss());
+}
+

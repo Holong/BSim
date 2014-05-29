@@ -44,11 +44,40 @@ private:
 
 	unsigned long getNextInstFromPredictor(unsigned long ip);
 	
+	unsigned long getNumOfDirectInst();
+	unsigned long getNumOfDirectDirectionMiss();
+	unsigned long getNumOfDirectAddressMiss();
+	double getDirectInstMissRate();
+	double getDirectDirectionMissRate();
+	double getDirectAddressMissRate();
+
+	unsigned long getNumOfIndirectInst();
+	unsigned long getNumOfIndirectDirectionMiss();
+	unsigned long getNumOfIndirectAddressMiss();
+	double getIndirectInstMissRate();
+	double getIndirectDirectionMissRate();
+	double getIndirectAddressMissRate();
+
+	unsigned long getNumOfCondInst();
+	unsigned long getNumOfCondDirectionMiss();
+	unsigned long getNumOfCondAddressMiss();
+	double getCondInstMissRate();
+	double getCondDirectionMissRate();
+	double getCondAddressMissRate();
+
+	unsigned long getNumOfUncondInst();
+	unsigned long getNumOfUncondDirectionMiss();
+	unsigned long getNumOfUncondAddressMiss();
+	double getUncondInstMissRate();
+	double getUncondDirectionMissRate();
+	double getUncondAddressMissRate();
+
 public:
 	Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem);
 	void setIP(unsigned long ip);
-	void toString();
-	double getMissRate();
+	void printResult();
+	void printRawData();
+	double getTotalMissRate();
 };
 
 #endif

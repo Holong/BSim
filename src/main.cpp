@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
 		}
 		
 		try {
-		//	disAssem->showInst(ip, tracer.getChildPid());
+			disAssem->showInst(ip, tracer.getChildPid());
 		}
 		catch(int ex) {
 			errMsg("showInst");
@@ -96,7 +96,7 @@ int main (int argc, char *argv[])
 			errMsg("setIP\n");
 		}
 	}
-	profiler.toString();
-	printf("Miss Rate : %lf\n", profiler.getMissRate());
+	profiler.printResult();
+	profiler.printRawData();
 	return 0;
 }
