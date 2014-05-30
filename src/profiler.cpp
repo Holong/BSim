@@ -3,9 +3,10 @@
 #include "profiler.h"
 #include "disassemble.h"
 
-Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem)
+Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem, char* argv[])
 {
 	this->pid = pid;
+	this->argv = argv;
 
 	beforeIP = 0;
 	currentIP = 0;
@@ -18,6 +19,8 @@ Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAsse
 	totalNumOfInst = 0;
 	totalNumOfBranchInst = 0;
 	totalNumOfMissPredict = 0;
+
+	time = 0;
 
 	for(int i = 0; i < TYPENUM; i++)
 	{
@@ -34,9 +37,15 @@ Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAsse
 	pDisAssem = disAssem;
 }
 
+void Profiler::setTime(long time)
+{
+	this->time = time;
+}
+
 void Profiler::setIP(unsigned long ip)
 {
 	bool xdirection;
+	
 	totalNumOfInst++;
 
 	nextIP = ip;
@@ -96,8 +105,6 @@ void Profiler::setIP(unsigned long ip)
 
 void Profiler::printRawData()
 {
-	printf("[%s] [totalInst : %ld, totalBranch : %ld, totalMiss : %ld]\n\n", pPredictor->nameOfPredictor(), totalNumOfInst, totalNumOfBranchInst, totalNumOfMissPredict);
-
 	printf("=========================== NOT BRANCH ============================= \n");
 	printf("TOTAL   ");
 	printf("%15ld\n", data[NOT].typeOfBranch[DIRECT].numOfInst);
@@ -211,19 +218,28 @@ void Profiler::printRawData()
 void Profiler::printResult()
 {
 	printf("\n\n");
-	printf("Profile Result \n");
+	printf(" Simulation Result \n\n");
+
 	printf("  1. Predictor : %s\n", pPredictor->nameOfPredictor());
-	printf("  2. Target : %s\n", "TEMP");
-	printf("  3. Instruction Information\n\n");
+	printf("  2. Workload  : ");
+	for(int i = 0; ; i++) {
+		if(argv[i] != NULL) {
+			printf("%s ", argv[i]);
+		}
+		else {
+			printf("\n");
+			break;
+		}
+	}
+	printf("  3. Time : %ld.%ld s\n\n", time/1000000, time%1000000);
 
-	printf("     1) Summary\n\n");
-
+	printf("  4. Result\n");
+	printf("     1) Summary\n");
 	printf("        Total Instructions : %10ld\n", totalNumOfInst);
 	printf("              Branches     : %10ld\n", totalNumOfBranchInst);
 	printf("              Miss Rate    : %10lf\n\n", getTotalMissRate());
 	
-	printf("     2) Direction\n\n");
-
+	printf("     2) Direction\n");
 	printf("        Direct Branches    : %10ld\n", getNumOfDirectInst());
 	printf("            Miss Rate      : %10lf\n", getDirectInstMissRate());
 	printf("            Direction Miss : %10lf\n", getDirectDirectionMissRate());
@@ -235,8 +251,7 @@ void Profiler::printResult()
 	printf("            Address Miss   : %10lf\n\n", getIndirectAddressMissRate());
 
 	
-	printf("     3) Condition\n\n");
-
+	printf("     3) Condition\n");
 	printf("        Cond Branches      : %10ld\n", getNumOfCondInst());
 	printf("            Miss Rate      : %10lf\n", getCondInstMissRate());
 	printf("            Direction Miss : %10lf\n", getCondDirectionMissRate());

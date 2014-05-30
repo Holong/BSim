@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "distorm.h"
 #include "mnemonics.h"
@@ -30,12 +31,14 @@ using std::cin;
 int main (int argc, char *argv[]) 
 {
 	unsigned long ip;	
+	struct timeval startTime;
+	struct timeval endTime;
 
 	/*
 	 ** This program is started with the PID of the target process.
 	 */
 	try {
-		if (argc != 2)
+		if (argc < 2)
 			throw 1;
 	}
 	catch(int exept) {
@@ -47,7 +50,7 @@ int main (int argc, char *argv[])
 	InfoRegs infoRegs;
 
 	// select profiled program
-	Tracer tracer(argv[1]);
+	Tracer tracer(argv[1], &argv[1]);
 
 	try {
 		tracer.traceStart();
@@ -58,8 +61,9 @@ int main (int argc, char *argv[])
 	
 	// set predictor
 	BPredictor* predictor = new NotTaken(tracer.getChildPid());
-	Profiler profiler(tracer.getChildPid(), predictor, disAssem);
+	Profiler profiler(tracer.getChildPid(), predictor, disAssem, &argv[1]);
 
+	gettimeofday(&startTime, NULL);
 	/*
 	 ** Loop now, tracing the child
 	 */
@@ -83,7 +87,7 @@ int main (int argc, char *argv[])
 		}
 		
 		try {
-			disAssem->showInst(ip, tracer.getChildPid());
+		//	disAssem->showInst(ip, tracer.getChildPid());
 		}
 		catch(int ex) {
 			errMsg("showInst");
@@ -96,7 +100,12 @@ int main (int argc, char *argv[])
 			errMsg("setIP\n");
 		}
 	}
+	gettimeofday(&endTime, NULL);
+	long endSec = (long)endTime.tv_sec * 1000000 + endTime.tv_usec;
+	long startSec = (long)startTime.tv_sec * 1000000 + startTime.tv_usec;
+	profiler.setTime(endSec - startSec);
+
 	profiler.printResult();
-	profiler.printRawData();
+//	profiler.printRawData();
 	return 0;
 }

@@ -49,9 +49,10 @@ private:
 	int signo;
 	char* fileName;
 	char* absoluteName;
+	char** argv;
 	
 public:
-	Tracer(char* programName);
+	Tracer(char* programName, char* argv[]);
 	void traceStart() throw (int);
 	void traceSingleStep(InfoRegs& pInfoRegs) throw (int);
 	pid_t getChildPid();

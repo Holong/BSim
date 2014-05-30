@@ -27,6 +27,7 @@ private:
 	BPredictor* pPredictor;
 	Disassembler* pDisAssem;
 	BranchResult predictedResult;
+	char** argv;
 
 	unsigned long beforeIP;
 	unsigned long currentIP;
@@ -41,6 +42,10 @@ private:
 	unsigned long totalNumOfMissPredict;
 
 	struct type_of_inst data[TYPENUM];
+
+	long time;
+
+
 
 	unsigned long getNextInstFromPredictor(unsigned long ip);
 	
@@ -73,7 +78,8 @@ private:
 	double getUncondAddressMissRate();
 
 public:
-	Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem);
+	Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAssem, char* argv[]);
+	void setTime(long time);
 	void setIP(unsigned long ip);
 	void printResult();
 	void printRawData();

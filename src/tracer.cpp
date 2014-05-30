@@ -6,7 +6,7 @@
 
 using namespace std;
 
-Tracer::Tracer(char* programName)
+Tracer::Tracer(char* programName, char* argv[])
 {
 	childPid = 0;
 	stat = 0;
@@ -20,6 +20,8 @@ Tracer::Tracer(char* programName)
 		fileName = programName;
 
 	absoluteName = programName;
+
+	this->argv = argv;
 }
 
 void Tracer::traceStart() throw (int)
@@ -33,7 +35,10 @@ void Tracer::traceStart() throw (int)
 		if( (res = ptrace(PTRACE_TRACEME, 0, 0, 0)) != 0 ) {
 			throw res;
 		}
-		execl(absoluteName, fileName, (char*)NULL);
+		
+		if(execvp(absoluteName, argv) == -1) {
+			execv(absoluteName, argv);
+		}
 	}
 	res = waitpid(childPid, &stat, WUNTRACED);
 
@@ -41,7 +46,6 @@ void Tracer::traceStart() throw (int)
 		throw res;
 	}
 
-	// cout << "Wait result stat " << stat << " childPid " << res << endl;
 	stat = 0;
 	signo = 0;
 }
