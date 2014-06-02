@@ -53,7 +53,7 @@ void Profiler::setIP(unsigned long ip)
 	if(beforeType) {
 		if(nextIP != predictedIP) {				// fail
 			totalNumOfMissPredict++;
-			pPredictor->after_predict(currentIP, false);
+			pPredictor->after_predict(currentIP, nextIP, false);
 			
 			xdirection = false;
 
@@ -78,7 +78,7 @@ void Profiler::setIP(unsigned long ip)
 
 		}
 		else {							// success
-			pPredictor->after_predict(currentIP, true);
+			pPredictor->after_predict(currentIP, nextIP, true);
 			data[InstType(beforeType)].typeOfBranch[BranchType(beforeType)].numOfSuccess++;
 		}
 	}

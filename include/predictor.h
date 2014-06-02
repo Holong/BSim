@@ -3,6 +3,7 @@
 
 #include <unistd.h>
 
+
 class BranchResult
 {
 private:
@@ -34,17 +35,20 @@ class BPredictor
 {
 protected:
 	pid_t pid;
+	char name[100];
 
 public:
-	char name[100];
 
 	BPredictor(pid_t pid) {
 		this->pid = pid;
 	};
 
-	virtual char* nameOfPredictor() = 0;
+	char* nameOfPredictor() {
+		return name;
+	};
+
 	virtual void do_predict(unsigned long ip, BranchResult& result) = 0;
-	virtual void after_predict(unsigned long ip, bool success) = 0;
+	virtual void after_predict(unsigned long ip, unsigned long nextIP, bool success) = 0;
 };
 
 #endif

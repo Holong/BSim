@@ -20,7 +20,8 @@
 #include "disassemble.h"
 
 #include "profiler.h"
-#include "predictor/notTaken.h"
+#include "predictor.h"
+#include "predictor/common.h"
 
 extern int errno;
 
@@ -60,7 +61,8 @@ int main (int argc, char *argv[])
 	}
 	
 	// set predictor
-	BPredictor* predictor = new NotTaken(tracer.getChildPid());
+	// BPredictor* predictor = new NotTaken(tracer.getChildPid());
+	BPredictor* predictor = new TwoBit(tracer.getChildPid());
 	Profiler profiler(tracer.getChildPid(), predictor, disAssem, &argv[1]);
 
 	gettimeofday(&startTime, NULL);
@@ -106,6 +108,6 @@ int main (int argc, char *argv[])
 	profiler.setTime(endSec - startSec);
 
 	profiler.printResult();
-//	profiler.printRawData();
+	profiler.printRawData();
 	return 0;
 }
