@@ -39,12 +39,16 @@ protected:
 
 public:
 
-	BPredictor(pid_t pid) {
-		this->pid = pid;
+	BPredictor() {
 	};
 
 	char* nameOfPredictor() {
 		return name;
+	};
+
+	void setPid(pid_t pid)
+	{
+		this->pid = pid;
 	};
 
 	virtual void do_predict(unsigned long ip, BranchResult& result) = 0;

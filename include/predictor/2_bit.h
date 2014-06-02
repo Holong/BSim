@@ -22,7 +22,7 @@ private:
 	enum _state state;
 
 public:
-	TwoBit(pid_t pid);
+	TwoBit();
 	~TwoBit();
 	TwoBit(const TwoBit& p);
 
@@ -30,7 +30,7 @@ public:
 	virtual void after_predict(unsigned long ip, unsigned long nextIP, bool success);
 };
 
-TwoBit::TwoBit(pid_t pid) : BPredictor(pid)
+TwoBit::TwoBit()
 {
 	sprintf(this->name, "2-bit Predictor");
 	state = TT;

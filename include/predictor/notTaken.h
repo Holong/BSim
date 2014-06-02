@@ -11,7 +11,7 @@
 class NotTaken : public BPredictor
 {
 public:
-	NotTaken(pid_t pid) : BPredictor(pid) {
+	NotTaken() {
 		sprintf(this->name, "NotTaken");
 	};
 	virtual void do_predict(unsigned long ip, BranchResult& result);

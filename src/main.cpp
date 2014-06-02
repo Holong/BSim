@@ -18,6 +18,7 @@
 #include "tracer.h"
 #include "error_functions.h"
 #include "disassemble.h"
+#include "simul.h"
 
 #include "profiler.h"
 #include "predictor.h"
@@ -60,10 +61,12 @@ int main (int argc, char *argv[])
 		errExit("trace start");
 	}
 	
+	// set Simulator
+	Simul bSim(tracer.getChildPid(), disAssem, &argv[1]);
+
 	// set predictor
-	// BPredictor* predictor = new NotTaken(tracer.getChildPid());
-	BPredictor* predictor = new TwoBit(tracer.getChildPid());
-	Profiler profiler(tracer.getChildPid(), predictor, disAssem, &argv[1]);
+	bSim.setPredictor(new NotTaken());
+	bSim.setPredictor(new TwoBit());
 
 	gettimeofday(&startTime, NULL);
 	/*
@@ -96,7 +99,7 @@ int main (int argc, char *argv[])
 		}
 
 		try {
-			profiler.setIP(ip);
+			bSim.runSimulation(ip);
 		}
 		catch(int execpt) {
 			errMsg("setIP\n");
@@ -105,9 +108,8 @@ int main (int argc, char *argv[])
 	gettimeofday(&endTime, NULL);
 	long endSec = (long)endTime.tv_sec * 1000000 + endTime.tv_usec;
 	long startSec = (long)startTime.tv_sec * 1000000 + startTime.tv_usec;
-	profiler.setTime(endSec - startSec);
+	bSim.setTime(endSec - startSec);
 
-	profiler.printResult();
-	profiler.printRawData();
+	bSim.printResult(true);
 	return 0;
 }
