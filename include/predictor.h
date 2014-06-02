@@ -44,6 +44,7 @@ public:
 
 	virtual char* nameOfPredictor() = 0;
 	virtual void do_predict(unsigned long ip, BranchResult& result) = 0;
+	virtual void after_predict(unsigned long ip, bool success) = 0;
 };
 
 #endif

@@ -16,6 +16,7 @@ public:
 	};
 	virtual char* nameOfPredictor();
 	virtual void do_predict(unsigned long ip, BranchResult& result);
+	virtual void after_predict(unsigned long ip, bool success);
 };
 
 char* NotTaken::nameOfPredictor()
@@ -31,6 +32,8 @@ void NotTaken::do_predict(unsigned long ip, BranchResult& result)
 	result.setJmpAddress(ip + disAssem.getInstLen(ip, pid));
 }
 
-
+void NotTaken::after_predict(unsigned long ip, bool success)
+{
+}
 
 #endif

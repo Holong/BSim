@@ -34,8 +34,8 @@ private:
 	unsigned long nextIP;
 	unsigned long predictedIP;
 
-	unsigned int beforeResult;
-	unsigned int currentResult;
+	unsigned int beforeType;
+	unsigned int currentType;
 
 	unsigned long totalNumOfInst;
 	unsigned long totalNumOfBranchInst;

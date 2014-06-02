@@ -13,8 +13,8 @@ Profiler::Profiler(pid_t pid, BPredictor* branchPredictor, Disassembler* disAsse
 	nextIP = 0;
 	predictedIP = 0;
 
-	beforeResult = 0;
-	currentResult = 0;
+	beforeType = 0;
+	currentType = 0;
 
 	totalNumOfInst = 0;
 	totalNumOfBranchInst = 0;
@@ -50,9 +50,10 @@ void Profiler::setIP(unsigned long ip)
 
 	nextIP = ip;
 
-	if(beforeResult) {
-		if(nextIP != predictedIP) {
+	if(beforeType) {
+		if(nextIP != predictedIP) {				// fail
 			totalNumOfMissPredict++;
+			pPredictor->after_predict(currentIP, false);
 			
 			xdirection = false;
 
@@ -68,26 +69,27 @@ void Profiler::setIP(unsigned long ip)
 			}
 			
 			if(xdirection) {
-				data[InstType(beforeResult)].typeOfBranch[BranchType(beforeResult)].numOfMissPredictDirection++;
+				data[InstType(beforeType)].typeOfBranch[BranchType(beforeType)].numOfMissPredictDirection++;
 			}
 			else
 			{
-				data[InstType(beforeResult)].typeOfBranch[BranchType(beforeResult)].numOfMissPredictAddress++;
+				data[InstType(beforeType)].typeOfBranch[BranchType(beforeType)].numOfMissPredictAddress++;
 			}
 
 		}
-		else {
-			data[InstType(beforeResult)].typeOfBranch[BranchType(beforeResult)].numOfSuccess++;
+		else {							// success
+			pPredictor->after_predict(currentIP, true);
+			data[InstType(beforeType)].typeOfBranch[BranchType(beforeType)].numOfSuccess++;
 		}
 	}
 
 	currentIP = ip;
-	currentResult = pDisAssem->typeOfInst(currentIP, pid);
-	beforeResult = currentResult;
+	currentType = pDisAssem->typeOfInst(currentIP, pid);
+	beforeType = currentType;
 
-	if(currentResult) {
+	if(currentType) {
 		totalNumOfBranchInst++;
-		data[InstType(currentResult)].typeOfBranch[BranchType(currentResult)].numOfInst++;
+		data[InstType(currentType)].typeOfBranch[BranchType(currentType)].numOfInst++;
 
 		pPredictor->do_predict(currentIP, predictedResult);
 
@@ -99,7 +101,7 @@ void Profiler::setIP(unsigned long ip)
 		}
 	}
 	else {
-		data[InstType(currentResult)].typeOfBranch[BranchType(currentResult)].numOfInst++;
+		data[InstType(currentType)].typeOfBranch[BranchType(currentType)].numOfInst++;
 	}
 }
 
