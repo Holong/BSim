@@ -19,7 +19,7 @@ class TwoBit : public BPredictor
 {
 private:
 	unsigned long* branchTargetBuffer;
-	enum _state state;
+	enum _state* state;
 
 public:
 	TwoBit();
@@ -33,10 +33,11 @@ public:
 TwoBit::TwoBit()
 {
 	sprintf(this->name, "2-bit Predictor");
-	state = TT;
 
+	state = new enum _state[BTB_SIZE];
 	branchTargetBuffer = new unsigned long[BTB_SIZE];
 	memset(branchTargetBuffer, 0, BTB_SIZE * sizeof(unsigned long));
+	memset(state, 0, BTB_SIZE * sizeof(enum _state));
 }
 
 TwoBit::~TwoBit()
@@ -57,15 +58,24 @@ TwoBit::TwoBit(const TwoBit& p) : BPredictor(p)
 void TwoBit::do_predict(unsigned long ip, BranchResult& result)
 {
 	Disassembler disAssem;
+	unsigned int type = disAssem.typeOfInst(ip, pid);
 
-	if(state == TT || state == T)
+	if(InstType(type) == CALL || InstType(type) == RETURN || InstType(type) == JMP)
 	{
 		result.setTorF(true);
 		result.setJmpAddress(branchTargetBuffer[getBTBOffset(ip)]);
 	}
 	else
 	{
-		result.setTorF(false);
+		if(state[getBTBOffset(ip)] == TT || state[getBTBOffset(ip)] == T)
+		{
+			result.setTorF(true);
+			result.setJmpAddress(branchTargetBuffer[getBTBOffset(ip)]);
+		}
+		else
+		{
+			result.setTorF(false);
+		}
 	}
 }
 
@@ -73,25 +83,25 @@ void TwoBit::after_predict(unsigned long ip, unsigned long nextIP, bool success)
 {
 	if(success)
 	{
-		if(state == TT)
-			state = TT;
-		else if(state == T)
-			state = TT;
-		else if(state == N)
-			state = T;
-		else if(state == NN)
-			state = N;
+		if(state[getBTBOffset(ip)] == TT)
+			state[getBTBOffset(ip)] = TT;
+		else if(state[getBTBOffset(ip)] == T)
+			state[getBTBOffset(ip)] = TT;
+		else if(state[getBTBOffset(ip)] == N)
+			state[getBTBOffset(ip)] = T;
+		else if(state[getBTBOffset(ip)] == NN)
+			state[getBTBOffset(ip)] = N;
 	}
 	else
 	{
-		if(state == TT)
-			state = T;
-		else if(state == T)
-			state = N;
-		else if(state == N)
-			state = NN;
-		else if(state == NN)
-			state = NN;
+		if(state[getBTBOffset(ip)] == TT)
+			state[getBTBOffset(ip)] = T;
+		else if(state[getBTBOffset(ip)] == T)
+			state[getBTBOffset(ip)] = N;
+		else if(state[getBTBOffset(ip)] == N)
+			state[getBTBOffset(ip)] = NN;
+		else if(state[getBTBOffset(ip)] == NN)
+			state[getBTBOffset(ip)] = NN;
 	}
 
 	branchTargetBuffer[getBTBOffset(ip)] = nextIP;
