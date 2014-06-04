@@ -9,10 +9,10 @@
 #include "predictor.h"
 #include "predictor/common.h"
 
-#define SIZE				10
-#define BTB_SIZE			(1 << SIZE)
-#define MASK				(BTB_SIZE - 1)
-#define getBTBOffset(x)			((x) & MASK)
+#define TWO_BIT_SIZE				10
+#define TWO_BIT_BTB_SIZE			(1 << TWO_BIT_SIZE)
+#define TWO_BIT_MASK				(TWO_BIT_BTB_SIZE - 1)
+#define TWO_BIT_getBTBOffset(x)				((x) & TWO_BIT_MASK)
 
 class TwoBit : public BPredictor
 {
@@ -33,10 +33,10 @@ TwoBit::TwoBit()
 {
 	sprintf(this->name, "2-bit Predictor");
 
-	state = new enum _state[BTB_SIZE];
-	branchTargetBuffer = new unsigned long[BTB_SIZE];
-	memset(branchTargetBuffer, 0, BTB_SIZE * sizeof(unsigned long));
-	memset(state, 0, BTB_SIZE * sizeof(enum _state));
+	state = new enum _state[TWO_BIT_BTB_SIZE];
+	branchTargetBuffer = new unsigned long[TWO_BIT_BTB_SIZE];
+	memset(branchTargetBuffer, 0, TWO_BIT_BTB_SIZE * sizeof(unsigned long));
+	memset(state, 0, TWO_BIT_BTB_SIZE * sizeof(enum _state));
 }
 
 TwoBit::~TwoBit()
@@ -47,16 +47,16 @@ TwoBit::~TwoBit()
 
 TwoBit::TwoBit(const TwoBit& p) : BPredictor(p)
 {
-	branchTargetBuffer = new unsigned long[BTB_SIZE];
+	branchTargetBuffer = new unsigned long[TWO_BIT_BTB_SIZE];
 	
-	for(int i = 0; i < BTB_SIZE; i++)
+	for(int i = 0; i < TWO_BIT_BTB_SIZE; i++)
 	{
 		branchTargetBuffer[i] = p.branchTargetBuffer[i];
 	}
 
-	state = new enum _state[BTB_SIZE];
+	state = new enum _state[TWO_BIT_BTB_SIZE];
 	
-	for(int i = 0; i < BTB_SIZE; i++)
+	for(int i = 0; i < TWO_BIT_BTB_SIZE; i++)
 	{
 		state[i] = p.state[i];
 	}
@@ -70,14 +70,14 @@ void TwoBit::do_predict(unsigned long ip, BranchResult& result)
 	if(InstType(type) == CALL || InstType(type) == RETURN || InstType(type) == JMP)
 	{
 		result.setTorF(true);
-		result.setJmpAddress(branchTargetBuffer[getBTBOffset(ip)]);
+		result.setJmpAddress(branchTargetBuffer[TWO_BIT_getBTBOffset(ip)]);
 	}
 	else
 	{
-		if(state[getBTBOffset(ip)] == TT || state[getBTBOffset(ip)] == T)
+		if(state[TWO_BIT_getBTBOffset(ip)] == TT || state[TWO_BIT_getBTBOffset(ip)] == T)
 		{
 			result.setTorF(true);
-			result.setJmpAddress(branchTargetBuffer[getBTBOffset(ip)]);
+			result.setJmpAddress(branchTargetBuffer[TWO_BIT_getBTBOffset(ip)]);
 		}
 		else
 		{
@@ -88,30 +88,36 @@ void TwoBit::do_predict(unsigned long ip, BranchResult& result)
 
 void TwoBit::after_predict(unsigned long ip, unsigned long nextIP, bool success)
 {
-	if(success)
-	{
-		if(state[getBTBOffset(ip)] == TT)
-			state[getBTBOffset(ip)] = TT;
-		else if(state[getBTBOffset(ip)] == T)
-			state[getBTBOffset(ip)] = TT;
-		else if(state[getBTBOffset(ip)] == N)
-			state[getBTBOffset(ip)] = T;
-		else if(state[getBTBOffset(ip)] == NN)
-			state[getBTBOffset(ip)] = N;
-	}
-	else
-	{
-		if(state[getBTBOffset(ip)] == TT)
-			state[getBTBOffset(ip)] = T;
-		else if(state[getBTBOffset(ip)] == T)
-			state[getBTBOffset(ip)] = N;
-		else if(state[getBTBOffset(ip)] == N)
-			state[getBTBOffset(ip)] = NN;
-		else if(state[getBTBOffset(ip)] == NN)
-			state[getBTBOffset(ip)] = NN;
-	}
+	Disassembler disAssem;
+	unsigned int type = disAssem.typeOfInst(ip, pid);
 
-	branchTargetBuffer[getBTBOffset(ip)] = nextIP;
+	branchTargetBuffer[TWO_BIT_getBTBOffset(ip)] = nextIP;
+
+	if(InstType(type) == CND_JMP)
+	{
+		if(success)
+		{
+			if(state[TWO_BIT_getBTBOffset(ip)] == TT)
+				state[TWO_BIT_getBTBOffset(ip)] = TT;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == T)
+				state[TWO_BIT_getBTBOffset(ip)] = TT;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == N)
+				state[TWO_BIT_getBTBOffset(ip)] = T;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == NN)
+				state[TWO_BIT_getBTBOffset(ip)] = N;
+		}
+		else
+		{
+			if(state[TWO_BIT_getBTBOffset(ip)] == TT)
+				state[TWO_BIT_getBTBOffset(ip)] = T;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == T)
+				state[TWO_BIT_getBTBOffset(ip)] = N;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == N)
+				state[TWO_BIT_getBTBOffset(ip)] = NN;
+			else if(state[TWO_BIT_getBTBOffset(ip)] == NN)
+				state[TWO_BIT_getBTBOffset(ip)] = NN;
+		}
+	}
 }
 
 #endif

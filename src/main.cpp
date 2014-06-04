@@ -32,11 +32,46 @@ using std::cout;
 using std::cin;
 
 Simul* pbSim;
+char* workLoad[100];
 
 void int_handler(int sig)
 {
 	pbSim->printResult(true);
 	exit(1);
+}
+
+void workLoadParsing(char* arg)
+{
+	char* temp = (char*)malloc(sizeof(char) * 100);
+	int index = 0;
+	int tempIndex = 0;
+	int pointerIndex = 0;
+
+	while(1)
+	{
+		if(arg[index] == '\0')
+		{
+			workLoad[pointerIndex] = temp;
+			pointerIndex++;
+			workLoad[pointerIndex] = NULL;
+			break;
+		}
+		else if(arg[index] == ' ')
+		{
+			workLoad[pointerIndex] = temp;
+			pointerIndex++;
+			index++;
+			tempIndex = 0;
+
+			temp = (char*)malloc(sizeof(char) * 100);
+		}
+		else
+		{
+			temp[tempIndex] = arg[index];
+			index++;
+			tempIndex++;
+		}
+	}
 }
 
 int main (int argc, char *argv[]) 
@@ -53,17 +88,19 @@ int main (int argc, char *argv[])
 	unsigned long numOfLimitInst = 0;
 	unsigned long numOfBranchInst = 0;
 	bool limitInst = false;
-	char** temp;
+	char** temp = NULL;
 
 	bool debugOn = false;
 
 	bool rawOn = false;
+	
+	bool loadOn = false;
 
 	/*
 	 ** This program is started with the PID of the target process.
 	 */
 
-	while((opt = getopt(argc, argv, ":i:dr")) != -1)
+	while((opt = getopt(argc, argv, ":i:drl:")) != -1)
 	{
 		switch(opt) {
 			case 'i':
@@ -76,7 +113,26 @@ int main (int argc, char *argv[])
 			case 'r':
 				rawOn = true;
 				break;
+			case 'l':
+				loadOn = true;
+				workLoadParsing(argv[optind - 1]);
+				for(int k = 0; ; k++)
+				{
+					if(workLoad[k] == NULL)
+						break;
+					else
+						printf("%s\n", workLoad[k]);
+				}
+				break;				
 		}
+	}
+
+	try {
+		if(!loadOn)
+			throw 1;
+	}
+	catch (int ex) {
+		errExit("Not WorkLoad");
 	}
 
 	struct sigaction act;
@@ -86,7 +142,7 @@ int main (int argc, char *argv[])
 	sigaction(SIGINT, &act, NULL);
 
 	// select profiled program
-	Tracer tracer(argv[optind], &argv[optind]);
+	Tracer tracer(workLoad[0], &workLoad[0]);
 
 	try {
 		tracer.traceStart();
@@ -96,13 +152,14 @@ int main (int argc, char *argv[])
 	}
 	
 	// set Simulator
-	Simul bSim(tracer.getChildPid(), disAssem, &argv[optind]);
+	Simul bSim(tracer.getChildPid(), disAssem, &workLoad[0]);
 	pbSim = &bSim;
 
 	// set predictor
 	bSim.setPredictor(new NotTaken());
 	bSim.setPredictor(new TwoBit());
 	bSim.setPredictor(new Correlate());
+	bSim.setPredictor(new GShare());
 
 	gettimeofday(&startTime, NULL);
 	/*
