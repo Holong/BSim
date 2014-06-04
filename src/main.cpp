@@ -12,6 +12,7 @@
 #include <iostream>
 #include <errno.h>
 #include <sys/time.h>
+#include <signal.h>
 
 #include "distorm.h"
 #include "mnemonics.h"
@@ -30,29 +31,62 @@ using std::endl;
 using std::cout;
 using std::cin;
 
+Simul* pbSim;
+
+void int_handler(int sig)
+{
+	pbSim->printResult(true);
+	exit(1);
+}
+
 int main (int argc, char *argv[]) 
 {
 	unsigned long ip;	
+
+	Disassembler* disAssem = new Disassembler;
+	InfoRegs infoRegs;
+
 	struct timeval startTime;
 	struct timeval endTime;
+
+	int opt;
+	unsigned long numOfLimitInst = 0;
+	unsigned long numOfBranchInst = 0;
+	bool limitInst = false;
+	char** temp;
+
+	bool debugOn = false;
+
+	bool rawOn = false;
 
 	/*
 	 ** This program is started with the PID of the target process.
 	 */
-	try {
-		if (argc < 2)
-			throw 1;
+
+	while((opt = getopt(argc, argv, ":i:dr")) != -1)
+	{
+		switch(opt) {
+			case 'i':
+				numOfLimitInst = strtoul(optarg, temp, 0);
+				limitInst = true;
+				break;
+			case 'd':
+				debugOn = true;
+				break;
+			case 'r':
+				rawOn = true;
+				break;
+		}
 	}
-	catch(int exept) {
-		usageErr("%s app_name\n", argv[0]);
-		exit(1);
-	}
-	
-	Disassembler* disAssem = new Disassembler;
-	InfoRegs infoRegs;
+
+	struct sigaction act;
+	act.sa_handler = int_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	sigaction(SIGINT, &act, NULL);
 
 	// select profiled program
-	Tracer tracer(argv[1], &argv[1]);
+	Tracer tracer(argv[optind], &argv[optind]);
 
 	try {
 		tracer.traceStart();
@@ -62,7 +96,8 @@ int main (int argc, char *argv[])
 	}
 	
 	// set Simulator
-	Simul bSim(tracer.getChildPid(), disAssem, &argv[1]);
+	Simul bSim(tracer.getChildPid(), disAssem, &argv[optind]);
+	pbSim = &bSim;
 
 	// set predictor
 	bSim.setPredictor(new NotTaken());
@@ -98,20 +133,33 @@ int main (int argc, char *argv[])
 		catch(int execpt) {
 			errMsg("runSimulation\n");
 		}
-			
-		try {
-//			disAssem->showInst(ip, tracer.getChildPid());
-		}
-		catch(int ex) {
-			errMsg("showInst");
+
+		if(debugOn)
+		{
+			try {
+				disAssem->showInst(ip, tracer.getChildPid());
+			}
+			catch(int ex) {
+				errMsg("showInst");
+			}
 		}
 
+		if(limitInst)
+		{
+			if(disAssem->typeOfInst(ip, tracer.getChildPid()))
+			{
+				numOfBranchInst++;
+
+				if(numOfBranchInst >= numOfLimitInst)
+					break;
+			}
+		}
 	}
 	gettimeofday(&endTime, NULL);
 	long endSec = (long)endTime.tv_sec * 1000000 + endTime.tv_usec;
 	long startSec = (long)startTime.tv_sec * 1000000 + startTime.tv_usec;
 	bSim.setTime(endSec - startSec);
 
-	bSim.printResult(true);
+	bSim.printResult(rawOn);
 	return 0;
 }
