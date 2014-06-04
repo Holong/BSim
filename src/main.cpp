@@ -67,6 +67,7 @@ int main (int argc, char *argv[])
 	// set predictor
 	bSim.setPredictor(new NotTaken());
 	bSim.setPredictor(new TwoBit());
+	bSim.setPredictor(new Correlate());
 
 	gettimeofday(&startTime, NULL);
 	/*
@@ -92,18 +93,19 @@ int main (int argc, char *argv[])
 		}
 		
 		try {
-		//	disAssem->showInst(ip, tracer.getChildPid());
+			bSim.runSimulation(ip);
+		}
+		catch(int execpt) {
+			errMsg("runSimulation\n");
+		}
+			
+		try {
+//			disAssem->showInst(ip, tracer.getChildPid());
 		}
 		catch(int ex) {
 			errMsg("showInst");
 		}
 
-		try {
-			bSim.runSimulation(ip);
-		}
-		catch(int execpt) {
-			errMsg("setIP\n");
-		}
 	}
 	gettimeofday(&endTime, NULL);
 	long endSec = (long)endTime.tv_sec * 1000000 + endTime.tv_usec;

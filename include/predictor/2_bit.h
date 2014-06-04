@@ -7,13 +7,12 @@
 
 #include "disassemble.h"
 #include "predictor.h"
+#include "predictor/common.h"
 
 #define SIZE				10
 #define BTB_SIZE			(1 << SIZE)
 #define MASK				(BTB_SIZE - 1)
 #define getBTBOffset(x)			((x) & MASK)
-
-enum _state {TT = 0, T, N, NN};
 
 class TwoBit : public BPredictor
 {
@@ -43,6 +42,7 @@ TwoBit::TwoBit()
 TwoBit::~TwoBit()
 {
 	delete []branchTargetBuffer;
+	delete []state;
 }
 
 TwoBit::TwoBit(const TwoBit& p) : BPredictor(p)
@@ -52,6 +52,13 @@ TwoBit::TwoBit(const TwoBit& p) : BPredictor(p)
 	for(int i = 0; i < BTB_SIZE; i++)
 	{
 		branchTargetBuffer[i] = p.branchTargetBuffer[i];
+	}
+
+	state = new enum _state[BTB_SIZE];
+	
+	for(int i = 0; i < BTB_SIZE; i++)
+	{
+		state[i] = p.state[i];
 	}
 }
 

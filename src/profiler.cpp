@@ -75,7 +75,8 @@ void Profiler::setIP(unsigned long ip)
 			{
 				data[InstType(beforeType)].typeOfBranch[BranchType(beforeType)].numOfMissPredictAddress++;
 			}
-
+//			printf("NAME : %s, NEXT IP : 0x%lx, PREDICTED IP : 0x%lx, INST : %d, BRANCH : %d, DIRECTION : %d\n",
+//				pPredictor->nameOfPredictor(), nextIP, predictedIP, InstType(beforeType), BranchType(beforeType), xdirection);
 		}
 		else {							// success
 			pPredictor->after_predict(currentIP, nextIP, true);
