@@ -160,6 +160,7 @@ int main (int argc, char *argv[])
 	bSim.setPredictor(new TwoBit());
 	bSim.setPredictor(new Correlate());
 	bSim.setPredictor(new GShare());
+	bSim.setPredictor(new GShareRet());
 
 	gettimeofday(&startTime, NULL);
 	/*
