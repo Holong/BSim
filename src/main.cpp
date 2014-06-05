@@ -36,7 +36,8 @@ char* workLoad[100];
 
 void int_handler(int sig)
 {
-	pbSim->printResult(true);
+	if(sig == SIGINT)
+		pbSim->printResult(true);
 	exit(1);
 }
 
